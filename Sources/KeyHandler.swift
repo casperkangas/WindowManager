@@ -38,33 +38,46 @@ func myCGEventCallback(
         let kKeyL = 37
         let kKeyR = 15  // 'R' Key
 
+        // We use DispatchQueue.main.async to bridge the gap between this C-function
+        // and the @MainActor isolated WindowActions.
+
         // 1. Maximize: Cmd + Option + L
         if isCmd && isOption && !isCtrl && keyCode == kKeyL {
-            WindowActions.snapActiveWindow(to: .maximize)
+            DispatchQueue.main.async {
+                WindowActions.snapActiveWindow(to: .maximize)
+            }
             return nil
         }
 
         // 2. Snap Left: Cmd + Option + Left Arrow
         if isCmd && isOption && !isCtrl && keyCode == kLeftArrow {
-            WindowActions.snapActiveWindow(to: .left)
+            DispatchQueue.main.async {
+                WindowActions.snapActiveWindow(to: .left)
+            }
             return nil
         }
 
         // 3. Snap Right: Cmd + Option + Right Arrow
         if isCmd && isOption && !isCtrl && keyCode == kRightArrow {
-            WindowActions.snapActiveWindow(to: .right)
+            DispatchQueue.main.async {
+                WindowActions.snapActiveWindow(to: .right)
+            }
             return nil
         }
 
         // 4. Reset (Center 1/3): Cmd + Option + R
         if isCmd && isOption && !isCtrl && keyCode == kKeyR {
-            WindowActions.snapActiveWindow(to: .reset)
+            DispatchQueue.main.async {
+                WindowActions.snapActiveWindow(to: .reset)
+            }
             return nil
         }
 
         // 5. Move Next Display: Ctrl + Option + Cmd + Right Arrow
         if isCmd && isOption && isCtrl && keyCode == kRightArrow {
-            WindowActions.moveActiveWindowToNextScreen()
+            DispatchQueue.main.async {
+                WindowActions.moveActiveWindowToNextScreen()
+            }
             return nil
         }
     }

@@ -18,12 +18,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
     var infoWindow: NSWindow!
 
+    // Settings Keys
+    let kDualSnapKey = "DualSnapEnabled"
+
     func applicationDidFinishLaunching(_ notification: Notification) {
 
         // 1. Check Permissions
         checkPermissions()
 
-        // 2. Setup Menu Bar Icon
+        // 2. Load Settings
+        let dualSnapState = UserDefaults.standard.bool(forKey: kDualSnapKey)
+        WindowActions.enableDualSnap = dualSnapState
+
+        // 3. Setup Menu Bar Icon
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
             button.title = "WM"
@@ -31,13 +38,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         setupMenu()
 
-        // 3. Setup Global Hotkeys
+        // 4. Setup Global Hotkeys
         setupHotkeys()
 
-        // 4. Create the Info Window
+        // 5. Create the Info Window
         createInfoWindow()
 
-        // 5. Run as "Accessory" (Menu Bar Only, No Dock Icon)
+        // 6. Run as "Accessory" (Menu Bar Only, No Dock Icon)
         NSApp.setActivationPolicy(.accessory)
 
         print("WindowManager Started. Look for 'WM' in the menu bar.")
@@ -63,11 +70,37 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func setupMenu() {
         let menu = NSMenu()
+
+        // Settings Submenu
+        let settingsMenu = NSMenu()
+        let dualSnapItem = NSMenuItem(
+            title: "Snap Both Windows (Dual Snap)", action: #selector(toggleDualSnap(_:)),
+            keyEquivalent: "")
+        dualSnapItem.state = WindowActions.enableDualSnap ? .on : .off
+        settingsMenu.addItem(dualSnapItem)
+
+        let settingsItem = NSMenuItem(title: "Settings", action: nil, keyEquivalent: "")
+        settingsItem.submenu = settingsMenu
+
+        menu.addItem(settingsItem)
+        menu.addItem(NSMenuItem.separator())
         menu.addItem(
             NSMenuItem(title: "Show Guide", action: #selector(showGuide), keyEquivalent: "g"))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q"))
         statusItem.menu = menu
+    }
+
+    @objc func toggleDualSnap(_ sender: NSMenuItem) {
+        // Toggle State
+        WindowActions.enableDualSnap.toggle()
+
+        // Update UI
+        sender.state = WindowActions.enableDualSnap ? .on : .off
+
+        // Save to UserDefaults
+        UserDefaults.standard.set(WindowActions.enableDualSnap, forKey: kDualSnapKey)
+        print("Dual Snap Toggled: \(WindowActions.enableDualSnap)")
     }
 
     @objc func showGuide() {
@@ -80,25 +113,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func createInfoWindow() {
-        // Create a standard window, slightly larger
-        let windowSize = NSRect(x: 0, y: 0, width: 350, height: 300)
+        let windowSize = NSRect(x: 0, y: 0, width: 350, height: 320)
         infoWindow = NSWindow(
             contentRect: windowSize,
-            styleMask: [.titled, .closable, .miniaturizable, .resizable],  // Added resizable
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         infoWindow.title = "WindowManager Guide"
         infoWindow.center()
-        infoWindow.isReleasedWhenClosed = false  // Don't destroy when closed, just hide
+        infoWindow.isReleasedWhenClosed = false
 
-        // 1. Create a Scroll View
         let scrollView = NSScrollView(frame: infoWindow.contentView!.bounds)
         scrollView.hasVerticalScroller = true
-        scrollView.autoresizingMask = [.width, .height]  // Resize with window
+        scrollView.autoresizingMask = [.width, .height]
         scrollView.borderType = .noBorder
 
-        // 2. Create the Text View
         let contentSize = scrollView.contentSize
         let content = NSTextView(
             frame: NSRect(x: 0, y: 0, width: contentSize.width, height: contentSize.height))
@@ -109,7 +139,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         content.isHorizontallyResizable = false
         content.autoresizingMask = .width
 
-        // Content Styling
         content.string = """
             Active Hotkeys:
 
@@ -129,15 +158,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             Move to Next Screen
 
             ---
-            You can close this window and open it anytime from the menu bar icon.
+            Settings:
+            Enable 'Snap Both Windows' in the menu bar to automatically snap the next visible window to the opposite side.
             """
         content.isEditable = false
         content.backgroundColor = .clear
         content.font = NSFont.systemFont(ofSize: 14)
-        // Add some padding
         content.textContainerInset = NSSize(width: 10, height: 10)
 
-        // 3. Link them up
         scrollView.documentView = content
         infoWindow.contentView?.addSubview(scrollView)
     }
