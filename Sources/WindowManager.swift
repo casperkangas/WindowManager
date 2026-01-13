@@ -2,7 +2,7 @@ import ApplicationServices
 import Cocoa
 
 @main
-struct WindMan {  // Renamed to match your v1.0 brand
+struct WindMan {
     static func main() {
         let app = NSApplication.shared
         let delegate = AppDelegate()
@@ -103,6 +103,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "© casperkangas 2026", action: nil, keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
+
+        // New Restart Option
+        let restartItem = NSMenuItem(
+            title: "Restart", action: #selector(restartApp), keyEquivalent: "r")
+        restartItem.keyEquivalentModifierMask = .command  // Cmd + R (only works when menu is open)
+        menu.addItem(restartItem)
+
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q"))
         statusItem.menu = menu
     }
@@ -116,6 +123,32 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func showGuide() {
         infoWindow.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    // --- APP LIFECYCLE ---
+
+    @objc func restartApp() {
+        // Determine valid path to relaunch
+        let url = Bundle.main.bundleURL
+        let path: String
+
+        if url.pathExtension == "app" {
+            // Running as a packaged .app bundle
+            path = url.path
+        } else {
+            // Running as raw debug binary (bundleURL points to the folder, so use executablePath)
+            path = Bundle.main.executablePath ?? url.path
+        }
+
+        // -n forces a new instance, ensuring it re-opens correctly
+        let script = "sleep 0.5; open -n '\(path)'"
+
+        let task = Process()
+        task.launchPath = "/bin/sh"
+        task.arguments = ["-c", script]
+        task.launch()
+
+        NSApp.terminate(nil)
     }
 
     @objc func quitApp() {
