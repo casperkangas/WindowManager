@@ -22,8 +22,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let kDualSnapKey = "DualSnapEnabled"
 
     // --- UPDATE CONFIGURATION ---
-    let repoOwner = "casperkangas"  // Change if your GitHub username is different
-    let repoName = "WindMan"  // Change if your Repo name is different
+    let repoOwner = "casperkangas"
+    let repoName = "WindMan"
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         checkPermissions()
@@ -56,7 +56,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func handleWake() {
-        print("🌅 Mac woke up. Refreshing hotkey tap...")
+        print("🌅 Mac woke up. Temporarily disabling hotkeys to unblock input...")
+
+        // 1. IMPROVEMENT: Immediately cut the connection so native keys (Cmd+Space) work instantly.
+        // If we don't do this, the system waits for WindMan to "wake up" before processing keys.
+        if let eventTap = KeyHandler.eventTap {
+            CGEvent.tapEnable(tap: eventTap, enable: false)
+        }
+
+        // 2. Wait 1 second for the system to settle, then rebuild the connection cleanly.
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.setupHotkeys()
         }
