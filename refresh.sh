@@ -9,7 +9,7 @@ BUNDLE_ID="com.casperkangas.windman"
 # ⚠️ UPDATE THIS VERSION NUMBER BEFORE EVERY RELEASE!
 # This determines what version the app thinks it is.
 # Match this to your GitHub Release tag WITHOUT THE "V" (e.g. v1.2 -> 1.3)
-VERSION="1.2"
+VERSION="1.3"
 # ---------------------------------------------------------
 
 echo "💀 Killing old instances..."
